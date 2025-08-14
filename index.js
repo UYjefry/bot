@@ -14,12 +14,11 @@ const { YtDlpPlugin } = require('@distube/yt-dlp');
 const { YouTubePlugin } = require('@distube/youtube');
 const { readdirSync } = require('fs');
 const { join } = require('path');
-const util = require('util');
 
 // 🌐 Servidor Express para Render
 const app = express();
 app.get("/", (req, res) => res.send("Bot activo 🚀"));
-app.listen(3000, () => console.log("Ping server listo en el puerto 3000"));
+app.listen(process.env.PORT || 3000, () => console.log("Ping server listo en el puerto 3000"));
 
 // 🧠 Crear cliente de Discord
 const client = new Client({
@@ -46,27 +45,29 @@ client.distube = new DisTube(client, {
   ]
 });
 
-// 📂 Cargar comandos prefix
-const prefixPath = join(__dirname, 'commands/prefix');
-for (const file of readdirSync(prefixPath).filter(f => f.endsWith('.js'))) {
-  const command = require(join(prefixPath, file));
-  if (command.name && typeof command.execute === 'function') {
-    client.commands.set(command.name, command);
-  } else {
-    console.warn(`⚠️ Comando prefix inválido: ${file}`);
-  }
-}
-
-// 📂 Cargar comandos slash
-const slashPath = join(__dirname, 'commands/slash');
+// 📂 Cargar comandos desde raíz
+const rootFiles = readdirSync(__dirname).filter(f => f.endsWith('.js') && f !== 'index.js');
 const slashCommandsArray = [];
-for (const file of readdirSync(slashPath).filter(f => f.endsWith('.js'))) {
-  const command = require(join(slashPath, file));
-  if (command.data?.name && typeof command.execute === 'function') {
-    client.slashCommands.set(command.data.name, command);
-    slashCommandsArray.push(command.data.toJSON());
-  } else {
-    console.warn(`⚠️ Comando slash inválido: ${file}`);
+
+for (const file of rootFiles) {
+  try {
+    const command = require(join(__dirname, file));
+    
+    // Comando prefix
+    if (command.name && typeof command.execute === 'function') {
+      client.commands.set(command.name, command);
+      console.log(`📦 Comando prefix cargado: ${file}`);
+    }
+
+    // Comando slash
+    if (command.data?.name && typeof command.execute === 'function') {
+      client.slashCommands.set(command.data.name, command);
+      slashCommandsArray.push(command.data.toJSON());
+      console.log(`📦 Comando slash cargado: ${file}`);
+    }
+
+  } catch (err) {
+    console.warn(`⚠️ Error al cargar ${file}:`, err);
   }
 }
 
@@ -126,8 +127,7 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-// 🎧 Eventos de DisTube
-// (copiar aquí exactamente como en tu código original para no perder funcionalidad)
+// 🎧 Eventos de DisTube (pegá los tuyos acá)
 
 // 🧼 Captura de errores globales
 process.on('unhandledRejection', err => {
