@@ -5,8 +5,7 @@ const {
   GatewayIntentBits, 
   Collection, 
   REST, 
-  Routes, 
-  EmbedBuilder 
+  Routes 
 } = require('discord.js');
 const { DisTube } = require('distube');
 const { SoundCloudPlugin } = require('@distube/soundcloud');
@@ -15,10 +14,10 @@ const { YouTubePlugin } = require('@distube/youtube');
 const { readdirSync } = require('fs');
 const { join } = require('path');
 
-// 🌐 Servidor Express para Render
+// 🌐 Servidor Express para mantener el bot despierto
 const app = express();
 app.get("/", (req, res) => res.send("Bot activo 🚀"));
-app.listen(process.env.PORT || 3000, () => console.log("Ping server listo en el puerto 3000"));
+app.listen(process.env.PORT || 3000, () => console.log("🌐 Servidor Express activo"));
 
 // 🧠 Crear cliente de Discord
 const client = new Client({
@@ -53,13 +52,11 @@ for (const file of rootFiles) {
   try {
     const command = require(join(__dirname, file));
     
-    // Comando prefix
     if (command.name && typeof command.execute === 'function') {
       client.commands.set(command.name, command);
       console.log(`📦 Comando prefix cargado: ${file}`);
     }
 
-    // Comando slash
     if (command.data?.name && typeof command.execute === 'function') {
       client.slashCommands.set(command.data.name, command);
       slashCommandsArray.push(command.data.toJSON());
@@ -73,13 +70,13 @@ for (const file of rootFiles) {
 
 // 🚀 Evento ready
 client.once('ready', async () => {
-  console.log(`✅ Conectado como ${client.user.tag}`);
+  console.log(`✅ Bot conectado como ${client.user.tag}`);
   client.user.setActivity(`${client.prefix}help`, { type: 3 });
 
   const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
   try {
     await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
+      Routes.applicationCommands(client.user.id),
       { body: slashCommandsArray }
     );
     console.log('📡 Comandos slash registrados correctamente.');
@@ -87,8 +84,7 @@ client.once('ready', async () => {
     console.error('❌ Error al registrar comandos slash:', err);
   }
 
-  // 🔗 Invitación
-  const inviteLink = `https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&permissions=274877990912&scope=bot%20applications.commands`;
+  const inviteLink = `https://discord.com/oauth2/authorize?client_id=${client.user.id}&permissions=274877990912&scope=bot%20applications.commands`;
   console.log(`🔗 Invitá el bot con este link:\n${inviteLink}`);
 });
 
