@@ -134,5 +134,7 @@ process.on('uncaughtException', err => {
   console.error('💥 Excepción no capturada:', err);
 });
 
-// 🔐 Iniciar sesión
-client.login(process.env.TOKEN);
+// 🔐 Iniciar sesión con captura de error
+client.login(process.env.TOKEN).catch(err => {
+  console.error('❌ Error al iniciar sesión en Discord:', err);
+});
